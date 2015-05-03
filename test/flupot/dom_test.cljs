@@ -1,6 +1,6 @@
-(ns flupot.core-test
+(ns flupot.dom-test
   (:require [cemerick.cljs.test :as t :refer-macros [is deftest testing]]
-            [flupot.core :as flupot]))
+            [flupot.dom :as flupot]))
 
 (deftest a-test
   (testing "FIXME, I fail."
