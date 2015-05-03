@@ -1,4 +1,5 @@
-(ns flupot.dom)
+(ns flupot.dom
+  (:require cljsjs.react))
 
-(defn foo [x]
-  (str "foo" x))
+(defn div [& args]
+  (.apply js/React.DOM.div nil (into-array (cons nil args))))
