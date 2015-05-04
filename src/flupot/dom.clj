@@ -17,5 +17,12 @@
 (defmacro define-dom-fns [& tags]
   `(do ~@(map dom-fn tags)))
 
-(defmacro div [& children]
-  `(~(dom-symbol 'div) nil nil ~@children))
+(defmacro div [opts & children]
+  (let [dom-sym (dom-symbol 'div)]
+    (if (map? opts)
+      `(~dom-sym (cljs.core/js-obj ~@(mapcat (fn [[k v]] [(name k) v]) opts)) ~@children)
+      `(let [opts# ~opts]
+         (if (map? opts#)
+           (do (js/console.log "dynamic clj->js")
+               (~dom-sym (cljs.core/clj->js opts#) ~@children))
+           (~dom-sym nil opts# ~@children))))))
