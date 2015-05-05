@@ -66,12 +66,19 @@
 (defn- attrs->react [m]
   `(cljs.core/js-obj ~@(mapcat (fn [[k v]] [(name (attr-opts k k)) v]) m)))
 
+(defn- literal? [x]
+  (not (or (symbol? x) (list? x))))
+
 (defn- dom-macro [tag]
   `(let [dom-sym#  '~(dom-symbol tag)
          opts-sym# (gensym "opts")]
      (defmacro ~tag [opts# & children#]
-       (if (map? opts#)
+       (cond
+         (map? opts#)
          `(~dom-sym# ~(attrs->react opts#) ~@children#)
+         (literal? opts#)
+         `(~dom-sym# nil ~opts# ~@children#)
+         :else
          `(let [~opts-sym# ~opts#]
             (if (cljs.core/map? ~opts-sym#)
               (~dom-sym# (flupot.dom/attrs->react ~opts-sym#) ~@children#)

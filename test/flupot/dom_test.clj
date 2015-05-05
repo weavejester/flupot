@@ -6,6 +6,11 @@
   (testing "literal option map"
     (is (= (macroexpand-1 '(flupot.dom/div {:class "foo"} "bar"))
            '(js/React.DOM.div (cljs.core/js-obj "className" "foo") "bar"))))
+
+  (testing "literal arguments with no option map"
+    (is (= (macroexpand-1 '(flupot.dom/div "foo" "bar"))
+           '(js/React.DOM.div nil "foo" "bar"))))
+
   (testing "ambiguous option map"
     (let [sexp (macroexpand-1 '(flupot.dom/span foo bar baz))
           opts (-> sexp second first)]
