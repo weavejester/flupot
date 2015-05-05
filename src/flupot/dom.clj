@@ -73,8 +73,8 @@
        (if (map? opts#)
          `(~dom-sym# ~(attrs->react opts#) ~@children#)
          `(let [~opts-sym# ~opts#]
-            (if (map? ~opts-sym#)
-              (~dom-sym# (attrs->react ~opts-sym#) ~@children#)
+            (if (cljs.core/map? ~opts-sym#)
+              (~dom-sym# (flupot.dom/attrs->react ~opts-sym#) ~@children#)
               (~dom-sym# nil ~opts-sym# ~@children#)))))))
 
 (defmacro define-dom-macros []
