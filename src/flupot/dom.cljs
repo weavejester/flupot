@@ -10,7 +10,7 @@
   (reduce-kv
    (fn [o k v]
      (let [k (name k)]
-       (aset o (or (aget attr-opts k) k) v)
+       (aset o (or (aget attr-opts k) k) (clj->js v))
        o))
    (js-obj)
    m))

@@ -43,8 +43,24 @@
    :tabindex :tabIndex
    :usemap :useMap})
 
+(defn- mapm [fk fv m]
+  (reduce-kv (fn [m k v] (assoc m (fk k) (fv v))) {} m))
+
+(defn- clj->js [x]
+  (cond
+    (map? x)
+    `(cljs.core/js-obj ~@(apply concat (mapm clj->js clj->js x)))
+    (or (vector? x) (set? x))
+    `(cljs.core/array ~@(clojure.core/map clj->js x))
+    (or (string? x) (number? x))
+    x
+    (keyword? x)
+    (name x)
+    :else
+    `(cljs.core/clj->js ~x)))
+
 (defmacro generate-attr-opts []
-  `(cljs.core/js-obj ~@(mapcat (fn [[k v]] [(name k) (name v)]) attr-opts)))
+  (clj->js (mapm name name attr-opts)))
 
 (defn- dom-symbol [tag]
   (symbol "js" (str "React.DOM." (name tag))))
@@ -64,7 +80,7 @@
   `(do ~@(clojure.core/map dom-fn tags)))
 
 (defn- attrs->react [m]
-  `(cljs.core/js-obj ~@(mapcat (fn [[k v]] [(name (attr-opts k k)) v]) m)))
+  (clj->js (mapm #(name (attr-opts % %)) identity m)))
 
 (defn- literal? [x]
   (not (or (symbol? x) (list? x))))

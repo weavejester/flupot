@@ -7,6 +7,18 @@
     (is (= (macroexpand-1 '(flupot.dom/div {:class "foo"} "bar"))
            '(js/React.DOM.div (cljs.core/js-obj "className" "foo") "bar"))))
 
+  (testing "literal style attribute"
+    (is (= (macroexpand-1 '(flupot.dom/div {:style {:background-color "red"}} "foo"))
+           '(js/React.DOM.div
+             (cljs.core/js-obj "style" (cljs.core/js-obj "background-color" "red"))
+             "foo"))))
+
+  (testing "symbols in style attribute"
+    (is (= (macroexpand-1 '(flupot.dom/p {:style {:color x}} "foo"))
+           '(js/React.DOM.p
+             (cljs.core/js-obj "style" (cljs.core/js-obj "color" (cljs.core/clj->js x)))
+             "foo"))))
+
   (testing "literal arguments with no option map"
     (is (= (macroexpand-1 '(flupot.dom/div "foo" "bar"))
            '(js/React.DOM.div nil "foo" "bar"))))
