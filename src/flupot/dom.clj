@@ -36,6 +36,70 @@
    :maxlength :maxLength
    :mediagroup :mediaGroup
    :novalidate :noValidate
+   :onabort :onAbort
+   :onblur :onBlur
+   :oncancel :onCancel
+   :oncanplay :onCanPlay
+   :oncanplaythrough :onCanPlayThrough
+   :onchange :onChange
+   :onclick :onClick
+   :oncontextmenu :onContextMenu
+   :oncompositionend :onCompositionEnd
+   :oncompositionstart :onCompositionStart
+   :oncompositionupdate :onCompositionUpdate
+   :oncopy :onCopy
+   :oncut :onCut
+   :ondblclick :onDoubleClick
+   :ondrag :onDrag
+   :ondragend :onDragEnd
+   :ondragenter :onDragEnter
+   :ondragexit :onDragExit
+   :ondragleave :onDragLeave
+   :ondragover :onDragOver
+   :ondragstart :onDragStart
+   :ondrop :onDrop
+   :ondurationchange :onDurationChange
+   :onemptied :onEmptied
+   :onencrypted :onEncrypted
+   :onended :onEnded
+   :onerror :onError
+   :onfocus :onFocus
+   :oninput :onInput
+   :onkeydown :onKeyDown
+   :onkeypress :onKeyPress
+   :onkeyup :onKeyUp
+   :onload :onLoad
+   :onloadeddata :onLoadedData
+   :onloadedmetadata :onLoadedMetadata
+   :onloadstart :onLoadStart
+   :onmousedown :onMouseDown
+   :onmouseenter :onMouseEnter
+   :onmouseleave :onMouseLeave
+   :onmousemove :onMouseMove
+   :onmouseout :onMouseOut
+   :onmouseover :onMouseOver
+   :onmouseup :onMouseUp
+   :onpaste :onPaste
+   :onpause :onPause
+   :onplay :onPlay
+   :onplaying :onPlaying
+   :onprogress :onProgress
+   :onratechange :onRateChange
+   :onscroll :onScroll
+   :onseeked :onSeeked
+   :onseeking :onSeeking
+   :onselect :onSelect
+   :onstalled :onStalled
+   :onsubmit :onSubmit
+   :onsuspend :onSuspend
+   :ontimeupdate :onTimeUpdate
+   :ontouchcancel :onTouchCancel
+   :ontouchend :onTouchEnd
+   :ontouchmove :onTouchMove
+   :ontouchstart :onTouchStart
+   :onvolumechange :onVolumeChange
+   :onwaiting :onWaiting
+   :onwheel :onWheel
    :rowspan :rowSpan
    :spellcheck :spellCheck
    :srcdoc :srcDoc

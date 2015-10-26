@@ -7,6 +7,10 @@
     (is (= (macroexpand-1 '(flupot.dom/div {:class "foo"} "bar"))
            '(js/React.DOM.div (cljs.core/js-obj "className" "foo") "bar"))))
 
+  (testing "event listeners"
+    (is (= (macroexpand-1 '(flupot.dom/div {:onclick f} "foo"))
+           '(js/React.DOM.div (cljs.core/js-obj "onClick" (cljs.core/clj->js f)) "foo"))))
+
   (testing "literal style attribute"
     (is (= (macroexpand-1 '(flupot.dom/div {:style {:background-color "red"}} "foo"))
            '(js/React.DOM.div
