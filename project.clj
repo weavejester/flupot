@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.145" :scope "provided"]
                  [cljsjs/react "0.13.1-0"]]
-  :plugins [[lein-cljsbuild "1.0.5"]]
+  :plugins [[lein-cljsbuild "1.1.0"]]
   :cljsbuild
   {:test-commands {"unit-tests" ["phantomjs" :runner "target/main.js"]}
    :builds {:main {:source-paths ["src"], :compiler {:output-to "target/main.js"}}}}
