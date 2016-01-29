@@ -1,4 +1,4 @@
-(defproject flupot "0.2.0"
+(defproject flupot "0.2.1"
   :description "ClojureScript functions for creating React elements"
   :url "https://github.com/weavejester/flupot"
   :license {:name "Eclipse Public License"
