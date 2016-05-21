@@ -6,6 +6,12 @@
 (def ^:private attr-opts
   (dom/generate-attr-opts))
 
+(defn- push-child! [args child]
+  (if (seq? child)
+    (doseq [c child]
+      (push-child! args c))
+    (.push args child)))
+
 (defn- attrs->react [m]
   (reduce-kv
    (fn [o k v]

@@ -8,5 +8,6 @@
   (br/mount
    (dom/div
     {:class "test"}
-    (dom/p "Hello " (dom/strong "World")))
+    (dom/p "Hello " (dom/strong "World"))
+    (dom/ul (for [i (range 5)] (dom/li {:key i} i))))
    app))

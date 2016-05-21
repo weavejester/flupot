@@ -1,5 +1,6 @@
 (ns flupot.dom
-  (:refer-clojure :exclude [map meta time]))
+  (:refer-clojure :exclude [map meta time])
+  (:require [clojure.core :as core]))
 
 (def tags
   '[a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -115,7 +116,7 @@
     (map? x)
     `(cljs.core/js-obj ~@(apply concat (mapm clj->js clj->js x)))
     (or (vector? x) (set? x))
-    `(cljs.core/array ~@(clojure.core/map clj->js x))
+    `(cljs.core/array ~@(core/map clj->js x))
     (or (string? x) (number? x))
     x
     (keyword? x)
@@ -137,11 +138,11 @@
          (do (.push args# nil)
              (.push args# opts#)))
        (doseq [child# children#]
-         (.push args# child#))
+         (push-child! args# child#))
        (.apply ~(dom-symbol tag) nil args#))))
 
 (defmacro define-dom-fns []
-  `(do ~@(clojure.core/map dom-fn tags)))
+  `(do ~@(core/map dom-fn tags)))
 
 (defn- attrs->react [m]
   (clj->js (mapm #(name (attr-opts % %)) identity m)))
@@ -149,17 +150,33 @@
 (defn- literal? [x]
   (not (or (symbol? x) (list? x))))
 
+(defn- apply-dom-args [form children]
+  (if (every? literal? children)
+    (concat form children)
+    (let [child-syms (core/map (fn [c] [(if-not (literal? c) (gensym)) c]) children)
+          bindings   (filter first child-syms)
+          arguments  (core/map (fn [[s c]] (if s s c)) child-syms)
+          args-sym   (gensym "args")]
+      `(let [~@(mapcat identity bindings)]
+         (if (or ~@(core/map (fn [[sym _]] `(seq? ~sym)) bindings))
+           (let [~args-sym (cljs.core/array)]
+             ~@(for [[s c] child-syms]
+                 (if s `(push-child! ~args-sym s) `(.push ~args-sym c)))
+             (.apply ~@form ~args-sym))
+           ~(concat form arguments))))))
+
 (defn- compile-dom-form [sym opts children]
   (cond
     (map? opts)
-    `(~sym ~(attrs->react opts) ~@children)
+    (apply-dom-args `(~sym ~(attrs->react opts)) children)
     (literal? opts)
-    `(~sym nil ~opts ~@children)
+    (apply-dom-args `(~sym nil ~opts) children)
     :else
-    `(let [opts# ~opts]
-       (if (cljs.core/map? opts#)
-         (~sym (flupot.dom/attrs->react opts#) ~@children)
-         (~sym nil opts# ~@children)))))
+    (let [opts-sym (gensym "opts")]
+      `(let [~opts-sym ~opts]
+         (if (cljs.core/map? ~opts-sym)
+           ~(apply-dom-args `(~sym (flupot.dom/attrs->react ~opts-sym)) children)
+           ~(apply-dom-args `(~sym nil ~opts-sym) children))))))
 
 (defn- dom-macro [tag]
   `(let [dom-sym# '~(dom-symbol tag)]
@@ -167,6 +184,6 @@
        (compile-dom-form dom-sym# opts# children#))))
 
 (defmacro define-dom-macros []
-  `(do ~@(clojure.core/map dom-macro tags)))
+  `(do ~@(core/map dom-macro tags)))
 
 (define-dom-macros)
