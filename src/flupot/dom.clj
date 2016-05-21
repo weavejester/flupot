@@ -149,20 +149,22 @@
 (defn- literal? [x]
   (not (or (symbol? x) (list? x))))
 
+(defn- compile-dom-form [sym opts children]
+  (cond
+    (map? opts)
+    `(~sym ~(attrs->react opts) ~@children)
+    (literal? opts)
+    `(~sym nil ~opts ~@children)
+    :else
+    `(let [opts# ~opts]
+       (if (cljs.core/map? opts#)
+         (~sym (flupot.dom/attrs->react opts#) ~@children)
+         (~sym nil opts# ~@children)))))
+
 (defn- dom-macro [tag]
-  `(let [dom-sym#  '~(dom-symbol tag)
-         opts-sym# (gensym "opts")]
+  `(let [dom-sym# '~(dom-symbol tag)]
      (defmacro ~tag [opts# & children#]
-       (cond
-         (map? opts#)
-         `(~dom-sym# ~(attrs->react opts#) ~@children#)
-         (literal? opts#)
-         `(~dom-sym# nil ~opts# ~@children#)
-         :else
-         `(let [~opts-sym# ~opts#]
-            (if (cljs.core/map? ~opts-sym#)
-              (~dom-sym# (flupot.dom/attrs->react ~opts-sym#) ~@children#)
-              (~dom-sym# nil ~opts-sym# ~@children#)))))))
+       (compile-dom-form dom-sym# opts# children#))))
 
 (defmacro define-dom-macros []
   `(do ~@(clojure.core/map dom-macro tags)))
