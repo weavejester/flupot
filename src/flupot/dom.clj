@@ -166,7 +166,7 @@
   (let [child-syms (core/map (fn [c] [(if-not (literal? c) (gensym)) c]) children)
         arguments  (core/map (fn [[s c]] (or s c)) child-syms)
         bindings   (filter first child-syms)
-        args-sym   (gensym "args")]
+        args-sym   (gensym "args__")]
     `(let [~@(mapcat identity bindings)]
        (if (or ~@(core/map (fn [[sym _]] `(seq? ~sym)) bindings))
          (let [~args-sym (cljs.core/array)]

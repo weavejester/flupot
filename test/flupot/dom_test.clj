@@ -1,6 +1,17 @@
 (ns flupot.dom-test
   (:require [clojure.test :refer :all]
+            [clojure.walk :as walk]
             [flupot.dom :as dom]))
+
+(def ^:private gensym-regex #"(_|[a-zA-Z0-9\-\'\*]+)#?_+(\d+_*#?)+(auto__)?$")
+
+(defn- gensym? [s]
+  (and (symbol? s) (re-find gensym-regex (name s))))
+
+(defn- normalize-gensyms [expr]
+  (let [counter   (atom 0)
+        re-gensym (memoize (fn [_] (symbol (str "__norm__" (swap! counter inc)))))]
+    (walk/postwalk #(if (gensym? %) (re-gensym %) %) expr)))
 
 (deftest test-inline-macros
   (testing "literal option map"
@@ -28,10 +39,19 @@
            '(js/React.DOM.div nil "foo" "bar"))))
 
   (testing "ambiguous option map"
-    (let [sexp (macroexpand-1 '(flupot.dom/span foo bar baz))
-          opts (-> sexp second first)]
-      (is (= sexp
-             `(let [~opts ~'foo]
-                (if (cljs.core/map? ~opts)
-                  (js/React.DOM.span (flupot.dom/attrs->react ~opts) ~'bar ~'baz)
-                  (js/React.DOM.span nil ~opts ~'bar ~'baz))))))))
+    (let [sexp (macroexpand-1 '(flupot.dom/span foo bar baz))]
+      (is (= (normalize-gensyms sexp)
+             (normalize-gensyms
+              `(let [bar# ~'bar, baz# ~'baz]
+                 (if (or (seq? bar#) (seq? baz#))
+                   (let [args# (cljs.core/array)]
+                     (flupot.dom/push-child! args# bar#)
+                     (flupot.dom/push-child! args# baz#)
+                     (let [opts# ~'foo]
+                       (if (map? opts#)
+                         (.apply js/React.DOM.span (flupot.dom/attrs->react opts#) args#)
+                         (.apply js/React.DOM.span nil opts# args#))))
+                   (let [opts2# ~'foo]
+                     (if (map? opts2#)
+                       (js/React.DOM.span (flupot.dom/attrs->react opts2#) bar# baz#)
+                       (js/React.DOM.span nil opts2# bar# baz#)))))))))))
