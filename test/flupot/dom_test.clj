@@ -39,19 +39,47 @@
            '(js/React.DOM.div nil "foo" "bar"))))
 
   (testing "ambiguous option map"
-    (let [sexp (macroexpand-1 '(flupot.dom/span foo bar baz))]
-      (is (= (normalize-gensyms sexp)
-             (normalize-gensyms
-              `(let [bar# ~'bar, baz# ~'baz]
-                 (if (or (seq? bar#) (seq? baz#))
-                   (let [args# (cljs.core/array)]
-                     (flupot.dom/push-child! args# bar#)
-                     (flupot.dom/push-child! args# baz#)
-                     (let [opts# ~'foo]
-                       (if (map? opts#)
-                         (.apply js/React.DOM.span (flupot.dom/attrs->react opts#) args#)
-                         (.apply js/React.DOM.span nil opts# args#))))
-                   (let [opts2# ~'foo]
-                     (if (map? opts2#)
-                       (js/React.DOM.span (flupot.dom/attrs->react opts2#) bar# baz#)
-                       (js/React.DOM.span nil opts2# bar# baz#)))))))))))
+    (is (= (normalize-gensyms (macroexpand-1 '(flupot.dom/span foo "bar" "baz")))
+           (normalize-gensyms
+            `(let [opts# ~'foo]
+               (if (map? opts#)
+                 (js/React.DOM.span (flupot.dom/attrs->react opts#) "bar" "baz")
+                 (js/React.DOM.span nil opts# "bar" "baz")))))))
+
+  (testing "ambiguous first child"
+    (is (= (normalize-gensyms (macroexpand-1 '(flupot.dom/span {} bar "baz")))
+           (normalize-gensyms
+            `(let [bar# ~'bar]
+               (if (or (seq? bar#))
+                 (let [args# (cljs.core/array)]
+                   (flupot.dom/push-child! args# bar#)
+                   (.push args# "baz")
+                   (.apply js/React.DOM.span (cljs.core/js-obj) args#))
+                 (js/React.DOM.span (cljs.core/js-obj) bar# "baz")))))))
+
+  (testing "ambiguous last child"
+    (is (= (normalize-gensyms (macroexpand-1 '(flupot.dom/span "bar" baz)))
+           (normalize-gensyms
+            `(let [baz# ~'baz]
+               (if (or (seq? baz#))
+                 (let [args# (cljs.core/array)]
+                   (flupot.dom/push-child! args# baz#)
+                   (.apply js/React.DOM.span nil "bar" args#))
+                 (js/React.DOM.span nil "bar" baz#)))))))
+
+  (testing "ambiguous options and children"
+    (is (= (normalize-gensyms (macroexpand-1 '(flupot.dom/span foo bar baz)))
+           (normalize-gensyms
+            `(let [bar# ~'bar, baz# ~'baz]
+               (if (or (seq? bar#) (seq? baz#))
+                 (let [args# (cljs.core/array)]
+                   (flupot.dom/push-child! args# bar#)
+                   (flupot.dom/push-child! args# baz#)
+                   (let [opts# ~'foo]
+                     (if (map? opts#)
+                       (.apply js/React.DOM.span (flupot.dom/attrs->react opts#) args#)
+                       (.apply js/React.DOM.span nil opts# args#))))
+                 (let [opts2# ~'foo]
+                   (if (map? opts2#)
+                     (js/React.DOM.span (flupot.dom/attrs->react opts2#) bar# baz#)
+                     (js/React.DOM.span nil opts2# bar# baz#))))))))))
