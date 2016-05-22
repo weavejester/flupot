@@ -13,5 +13,6 @@
     (p "Testing functions")
     (p (list "Testing " "functions " "with " "lists"))
     (dom/ul (for [i (range 1 6)] (dom/li {:key i} i)))
-    (dom/p {:style {:color :red}} "Testing style"))
+    (dom/p {:style {:color :red}} "Testing style")
+    (dom/p "Testing " (list "lists " (list "within " "lists"))))
    app))

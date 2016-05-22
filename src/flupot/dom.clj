@@ -170,18 +170,21 @@
     `(let [~@(mapcat identity bindings)]
        (if (or ~@(core/map (fn [[sym _]] `(seq? ~sym)) bindings))
          (let [~args-sym (cljs.core/array)]
-           ~@(for [[s c] child-syms]
-               (if s `(push-child! ~args-sym ~s) `(.push ~args-sym ~c)))
            ~(cond
               (map? opts)
-              `(.apply ~sym ~(attrs->react opts) ~args-sym)
+              `(.push ~args-sym ~(attrs->react opts))
               (literal? opts)
-              `(.apply ~sym nil ~opts ~args-sym)
+              `(do (.push ~args-sym nil)
+                   (.push ~args-sym ~opts))
               :else
               `(let [opts# ~opts]
                  (if (map? opts#)
-                   (.apply ~sym (flupot.dom/attrs->react opts#) ~args-sym)
-                   (.apply ~sym nil opts# ~args-sym)))))
+                   (.push ~args-sym (flupot.dom/attrs->react opts#))
+                   (do (.push ~args-sym nil)
+                       (.push ~args-sym opts#)))))
+           ~@(for [[s c] child-syms]
+               (if s `(push-child! ~args-sym ~s) `(.push ~args-sym ~c)))
+           (.apply ~sym nil ~args-sym))
          ~(flat-dom-form sym opts arguments)))))
 
 (defn- compile-dom-form [sym opts children]

@@ -52,9 +52,10 @@
             `(let [bar# ~'bar]
                (if (or (seq? bar#))
                  (let [args# (cljs.core/array)]
+                   (.push args# (cljs.core/js-obj))
                    (flupot.dom/push-child! args# bar#)
                    (.push args# "baz")
-                   (.apply js/React.DOM.span (cljs.core/js-obj) args#))
+                   (.apply js/React.DOM.span nil args#))
                  (js/React.DOM.span (cljs.core/js-obj) bar# "baz")))))))
 
   (testing "ambiguous last child"
@@ -63,8 +64,10 @@
             `(let [baz# ~'baz]
                (if (or (seq? baz#))
                  (let [args# (cljs.core/array)]
+                   (do (.push args# nil)
+                       (.push args# "bar"))
                    (flupot.dom/push-child! args# baz#)
-                   (.apply js/React.DOM.span nil "bar" args#))
+                   (.apply js/React.DOM.span nil args#))
                  (js/React.DOM.span nil "bar" baz#)))))))
 
   (testing "ambiguous options and children"
@@ -73,12 +76,14 @@
             `(let [bar# ~'bar, baz# ~'baz]
                (if (or (seq? bar#) (seq? baz#))
                  (let [args# (cljs.core/array)]
-                   (flupot.dom/push-child! args# bar#)
-                   (flupot.dom/push-child! args# baz#)
                    (let [opts# ~'foo]
                      (if (map? opts#)
-                       (.apply js/React.DOM.span (flupot.dom/attrs->react opts#) args#)
-                       (.apply js/React.DOM.span nil opts# args#))))
+                       (.push args# (flupot.dom/attrs->react opts#))
+                       (do (.push args# nil)
+                           (.push args# opts#))))
+                   (flupot.dom/push-child! args# bar#)
+                   (flupot.dom/push-child! args# baz#)
+                   (.apply js/React.DOM.span nil args#))
                  (let [opts2# ~'foo]
                    (if (map? opts2#)
                      (js/React.DOM.span (flupot.dom/attrs->react opts2#) bar# baz#)
