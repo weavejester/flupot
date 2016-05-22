@@ -176,7 +176,7 @@
               (map? opts)
               `(.apply ~sym ~(attrs->react opts) ~args-sym)
               (literal? opts)
-              `(.apply ~sym nil ~args-sym)
+              `(.apply ~sym nil ~opts ~args-sym)
               :else
               `(let [opts# ~opts]
                  (if (map? opts#)
