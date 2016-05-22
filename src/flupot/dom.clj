@@ -150,33 +150,44 @@
 (defn- literal? [x]
   (not (or (symbol? x) (list? x))))
 
-(defn- apply-dom-args [form children]
-  (if (every? literal? children)
-    (concat form children)
-    (let [child-syms (core/map (fn [c] [(if-not (literal? c) (gensym)) c]) children)
-          bindings   (filter first child-syms)
-          arguments  (core/map (fn [[s c]] (if s s c)) child-syms)
-          args-sym   (gensym "args")]
-      `(let [~@(mapcat identity bindings)]
-         (if (or ~@(core/map (fn [[sym _]] `(seq? ~sym)) bindings))
-           (let [~args-sym (cljs.core/array)]
-             ~@(for [[s c] child-syms]
-                 (if s `(push-child! ~args-sym s) `(.push ~args-sym c)))
-             (.apply ~@form ~args-sym))
-           ~(concat form arguments))))))
-
-(defn- compile-dom-form [sym opts children]
+(defn- flat-dom-form [sym opts children]
   (cond
     (map? opts)
-    (apply-dom-args `(~sym ~(attrs->react opts)) children)
+    `(~sym ~(attrs->react opts) ~@children)
     (literal? opts)
-    (apply-dom-args `(~sym nil ~opts) children)
+    `(~sym nil ~opts ~@children)
     :else
-    (let [opts-sym (gensym "opts")]
-      `(let [~opts-sym ~opts]
-         (if (cljs.core/map? ~opts-sym)
-           ~(apply-dom-args `(~sym (flupot.dom/attrs->react ~opts-sym)) children)
-           ~(apply-dom-args `(~sym nil ~opts-sym) children))))))
+    `(let [opts# ~opts]
+       (if (map? opts#)
+         (~sym (flupot.dom/attrs->react opts#) ~@children)
+         (~sym nil opts# ~@children)))))
+
+(defn- nested-dom-form [sym opts children]
+  (let [child-syms (core/map (fn [c] [(if-not (literal? c) (gensym)) c]) children)
+        arguments  (core/map (fn [[s c]] (or s c)) child-syms)
+        bindings   (filter first child-syms)
+        args-sym   (gensym "args")]
+    `(let [~@(mapcat identity bindings)]
+       (if (or ~@(core/map (fn [[sym _]] `(seq? ~sym)) bindings))
+         (let [~args-sym (cljs.core/array)]
+           ~@(for [[s c] child-syms]
+               (if s `(push-child! ~args-sym ~s) `(.push ~args-sym ~c)))
+           ~(cond
+              (map? opts)
+              `(.apply ~sym ~(attrs->react opts) ~args-sym)
+              (literal? opts)
+              `(.apply ~sym nil ~args-sym)
+              :else
+              `(let [opts# ~opts]
+                 (if (map? opts#)
+                   (.apply ~sym (flupot.dom/attrs->react opts#) ~args-sym)
+                   (.apply ~sym nil opts# ~args-sym)))))
+         ~(flat-dom-form sym opts arguments)))))
+
+(defn- compile-dom-form [sym opts children]
+  (if (every? literal? children)
+    (flat-dom-form sym opts children)
+    (nested-dom-form sym opts children)))
 
 (defn- dom-macro [tag]
   `(let [dom-sym# '~(dom-symbol tag)]
