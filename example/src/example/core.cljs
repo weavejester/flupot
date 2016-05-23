@@ -9,7 +9,7 @@
         a {:style {:color :blue}}]
     (dom/div
      {:class "test"}
-     (dom/p "Hello " (dom/strong "World"))
+     (dom/p "Hello " (dom/strong {:onclick #(js/alert "World")} "World"))
      (p "Testing functions")
      (p (list "Testing " "functions " "with " "lists"))
      (dom/ul (for [i (range 1 6)] (dom/li {:key i} i)))
