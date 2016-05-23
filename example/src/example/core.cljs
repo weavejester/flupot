@@ -5,7 +5,8 @@
 (enable-console-print!)
 
 (defn content []
-  (let [p dom/p]
+  (let [p dom/p
+        a {:style {:color :blue}}]
     (dom/div
      {:class "test"}
      (dom/p "Hello " (dom/strong "World"))
@@ -13,6 +14,7 @@
      (p (list "Testing " "functions " "with " "lists"))
      (dom/ul (for [i (range 1 6)] (dom/li {:key i} i)))
      (dom/p {:style {:color :red}} "Testing style")
+     (dom/p a "Testing programmatic style")
      (dom/p "Testing " (list "lists " (list "within " "lists"))))))
 
 (let [app (.getElementById js/document "app")]
