@@ -1,7 +1,8 @@
 (ns flupot.dom
   (:refer-clojure :exclude [map meta time])
   (:require-macros [flupot.dom :as dom])
-  (:require cljsjs.react))
+  (:require cljsjs.react
+            [clojure.string :as str]))
 
 (def ^:private attr-opts
   (dom/generate-attr-opts))
@@ -12,11 +13,18 @@
       (push-child! args c))
     (.push args child)))
 
+(defn- fix-class [v]
+  (if (sequential? v)
+    (str/join " " (cljs.core/map #(if (keyword? %) (name %) (str %)) v))
+    (clj->js v)))
+
 (defn- attrs->react [m]
   (reduce-kv
    (fn [o k v]
      (let [k (name k)]
-       (aset o (or (aget attr-opts k) k) (clj->js v))
+       (if (= k "class")
+         (aset o "className" (fix-class v))
+         (aset o (or (aget attr-opts k) k) (clj->js v)))
        o))
    (js-obj)
    m))

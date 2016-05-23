@@ -1,6 +1,7 @@
 (ns flupot.dom
   (:refer-clojure :exclude [map meta time])
-  (:require [clojure.core :as core]))
+  (:require [clojure.core :as core]
+            [clojure.string :as str]))
 
 (def tags
   '[a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -144,11 +145,33 @@
 (defmacro define-dom-fns []
   `(do ~@(core/map dom-fn tags)))
 
-(defn- attrs->react [m]
-  (clj->js (mapm #(name (attr-opts % %)) identity m)))
+(defn- boolean? [v]
+  (or (true? v) (false? v)))
+
+(defn- quoted? [x]
+  (and (list? x) (= 'quote (first x))))
 
 (defn- literal? [x]
-  (not (or (symbol? x) (list? x))))
+  (or (quoted? x) (not (or (symbol? x) (list? x)))))
+
+(defn- to-str [x]
+  (cond
+    (keyword? x) (name x)
+    (quoted? x)  (to-str (second x))
+    :else        (str x)))
+
+(defn- fix-class [m]
+  (let [cls (:class m)]
+    (cond
+      (and (or (vector? cls) (set? cls)) (every? literal? cls))
+      (assoc m :class (str/join " " (core/map to-str cls)))
+      (or (nil? cls) (string? cls) (number? cls) (boolean? cls))
+      m
+      :else
+      (assoc m :class `(flupot.dom/fix-class ~cls)))))
+
+(defn- attrs->react [m]
+  (clj->js (mapm #(name (attr-opts % %)) identity (fix-class m))))
 
 (defn- flat-dom-form [sym opts children]
   (cond
