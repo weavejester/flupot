@@ -34,6 +34,20 @@
              (cljs.core/js-obj "style" (cljs.core/js-obj "color" (cljs.core/clj->js x)))
              "foo"))))
 
+  (testing "classes as literal vectors"
+    (is (= (macroexpand-1 '(flupot.dom/p {:class ["foo" :bar 'baz]} "foo"))
+           '(js/React.DOM.p (cljs.core/js-obj "className" "foo bar baz") "foo"))))
+
+  (testing "classes as literal sets"
+    (is (= (macroexpand-1 '(flupot.dom/p {:class #{"foo" :bar 'baz}} "foo"))
+           '(js/React.DOM.p (cljs.core/js-obj "className" "foo bar baz") "foo"))))
+
+  (testing "classes as symbols"
+    (is (= (macroexpand-1 '(flupot.dom/p {:class c} "foo"))
+           '(js/React.DOM.p
+             (cljs.core/js-obj "className" (cljs.core/clj->js (flupot.dom/fix-class c)))
+             "foo"))))
+
   (testing "literal arguments with no option map"
     (is (= (macroexpand-1 '(flupot.dom/div "foo" "bar"))
            '(js/React.DOM.div nil "foo" "bar"))))
