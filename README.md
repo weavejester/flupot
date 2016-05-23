@@ -35,6 +35,14 @@ If the first argument is a map, it's used as the element's attributes:
 
 Special React options like `:key` are also supported.
 
+If one of the child arguments is a seq, it's expanded out automatically:
+
+```clojure
+(dom/ul
+ (for [i (range 5)]
+   (dom/li {:key i} i)))
+```
+
 ## License
 
 Copyright © 2016 James Reeves
