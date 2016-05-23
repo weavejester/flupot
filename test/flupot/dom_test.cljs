@@ -1,5 +1,5 @@
 (ns flupot.dom-test
-  (:require [cemerick.cljs.test :as t :refer-macros [is deftest testing]]
+  (:require [cljs.test :refer-macros [is deftest testing]]
             [flupot.dom :as flupot]))
 
 (deftest a-test
