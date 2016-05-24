@@ -1,7 +1,8 @@
 (ns flupot.dom
   (:refer-clojure :exclude [map meta time])
   (:require [clojure.core :as core]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [flupot.core :as flupot]))
 
 (def tags
   '[a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -112,38 +113,14 @@
 (defn- mapm [fk fv m]
   (reduce-kv (fn [m k v] (assoc m (fk k) (fv v))) {} m))
 
-(defn- clj->js [x]
-  (cond
-    (map? x)
-    `(cljs.core/js-obj ~@(apply concat (mapm clj->js clj->js x)))
-    (or (vector? x) (set? x))
-    `(cljs.core/array ~@(core/map clj->js x))
-    (or (string? x) (number? x))
-    x
-    (keyword? x)
-    (name x)
-    :else
-    `(cljs.core/clj->js ~x)))
-
 (defmacro generate-attr-opts []
-  (clj->js (mapm name name attr-opts)))
+  (flupot/clj->js (mapm name name attr-opts)))
 
 (defn- dom-symbol [tag]
   (symbol "js" (str "React.DOM." (name tag))))
 
-(defn- dom-fn [tag]
-  `(defn ~tag [opts# & children#]
-     (let [args# (cljs.core/array)]
-       (if (map? opts#)
-         (.push args# (attrs->react opts#))
-         (do (.push args# nil)
-             (.push args# opts#)))
-       (doseq [child# children#]
-         (push-child! args# child#))
-       (.apply ~(dom-symbol tag) nil args#))))
-
 (defmacro define-dom-fns []
-  `(do ~@(core/map dom-fn tags)))
+  `(do ~@(for [t tags] `(flupot/defelement-fn ~t ~(dom-symbol t) attrs->react))))
 
 (defn- boolean? [v]
   (or (true? v) (false? v)))
@@ -171,7 +148,7 @@
       (assoc m :class `(flupot.dom/fix-class ~cls)))))
 
 (defn- attrs->react [m]
-  (clj->js (mapm #(name (attr-opts % %)) identity (fix-class m))))
+  (flupot/clj->js (mapm #(name (attr-opts % %)) identity (fix-class m))))
 
 (defn- flat-dom-form [sym opts children]
   (cond

@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [map meta time])
   (:require-macros [flupot.dom :as dom])
   (:require cljsjs.react
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [flupot.core :as flupot]))
 
 (def ^:private attr-opts
   (dom/generate-attr-opts))
