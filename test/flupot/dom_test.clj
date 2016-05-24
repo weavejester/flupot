@@ -67,7 +67,7 @@
                (if (or (seq? bar#))
                  (let [args# (cljs.core/array)]
                    (.push args# (cljs.core/js-obj))
-                   (flupot.dom/push-child! args# bar#)
+                   (flupot.core/push-child! args# bar#)
                    (.push args# "baz")
                    (.apply js/React.DOM.span nil args#))
                  (js/React.DOM.span (cljs.core/js-obj) bar# "baz")))))))
@@ -80,7 +80,7 @@
                  (let [args# (cljs.core/array)]
                    (do (.push args# nil)
                        (.push args# "bar"))
-                   (flupot.dom/push-child! args# baz#)
+                   (flupot.core/push-child! args# baz#)
                    (.apply js/React.DOM.span nil args#))
                  (js/React.DOM.span nil "bar" baz#)))))))
 
@@ -95,8 +95,8 @@
                        (.push args# (flupot.dom/attrs->react opts#))
                        (do (.push args# nil)
                            (.push args# opts#))))
-                   (flupot.dom/push-child! args# bar#)
-                   (flupot.dom/push-child! args# baz#)
+                   (flupot.core/push-child! args# bar#)
+                   (flupot.core/push-child! args# baz#)
                    (.apply js/React.DOM.span nil args#))
                  (let [opts2# ~'foo]
                    (if (map? opts2#)
