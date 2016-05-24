@@ -120,27 +120,24 @@
   (symbol "js" (str "React.DOM." (name tag))))
 
 (defmacro define-dom-fns []
-  `(do ~@(for [t tags] `(flupot/defelement-fn ~t ~(dom-symbol t) attrs->react))))
+  `(do ~@(for [t tags]
+           `(flupot/defelement-fn ~t
+              ~(dom-symbol t)
+              attrs->react))))
 
 (defn- boolean? [v]
   (or (true? v) (false? v)))
 
-(defn- quoted? [x]
-  (and (list? x) (= 'quote (first x))))
-
-(defn- literal? [x]
-  (or (quoted? x) (not (or (symbol? x) (list? x)))))
-
 (defn- to-str [x]
   (cond
-    (keyword? x) (name x)
-    (quoted? x)  (to-str (second x))
-    :else        (str x)))
+    (keyword? x)       (name x)
+    (flupot/quoted? x) (to-str (second x))
+    :else              (str x)))
 
 (defn- fix-class [m]
   (let [cls (:class m)]
     (cond
-      (and (or (vector? cls) (set? cls)) (every? literal? cls))
+      (and (or (vector? cls) (set? cls)) (every? flupot/literal? cls))
       (assoc m :class (str/join " " (core/map to-str cls)))
       (or (nil? cls) (string? cls) (number? cls) (boolean? cls))
       m
@@ -150,54 +147,11 @@
 (defn- attrs->react [m]
   (flupot/clj->js (mapm #(name (attr-opts % %)) identity (fix-class m))))
 
-(defn- flat-dom-form [sym opts children]
-  (cond
-    (map? opts)
-    `(~sym ~(attrs->react opts) ~@children)
-    (literal? opts)
-    `(~sym nil ~opts ~@children)
-    :else
-    `(let [opts# ~opts]
-       (if (map? opts#)
-         (~sym (flupot.dom/attrs->react opts#) ~@children)
-         (~sym nil opts# ~@children)))))
-
-(defn- nested-dom-form [sym opts children]
-  (let [child-syms (core/map (fn [c] [(if-not (literal? c) (gensym)) c]) children)
-        arguments  (core/map (fn [[s c]] (or s c)) child-syms)
-        bindings   (filter first child-syms)
-        args-sym   (gensym "args__")]
-    `(let [~@(mapcat identity bindings)]
-       (if (or ~@(core/map (fn [[sym _]] `(seq? ~sym)) bindings))
-         (let [~args-sym (cljs.core/array)]
-           ~(cond
-              (map? opts)
-              `(.push ~args-sym ~(attrs->react opts))
-              (literal? opts)
-              `(do (.push ~args-sym nil)
-                   (.push ~args-sym ~opts))
-              :else
-              `(let [opts# ~opts]
-                 (if (map? opts#)
-                   (.push ~args-sym (flupot.dom/attrs->react opts#))
-                   (do (.push ~args-sym nil)
-                       (.push ~args-sym opts#)))))
-           ~@(for [[s c] child-syms]
-               (if s `(push-child! ~args-sym ~s) `(.push ~args-sym ~c)))
-           (.apply ~sym nil ~args-sym))
-         ~(flat-dom-form sym opts arguments)))))
-
-(defn- compile-dom-form [sym opts children]
-  (if (every? literal? children)
-    (flat-dom-form sym opts children)
-    (nested-dom-form sym opts children)))
-
-(defn- dom-macro [tag]
-  `(let [dom-sym# '~(dom-symbol tag)]
-     (defmacro ~tag [opts# & children#]
-       (compile-dom-form dom-sym# opts# children#))))
-
 (defmacro define-dom-macros []
-  `(do ~@(core/map dom-macro tags)))
+  `(do ~@(for [t tags]
+           `(flupot/defelement-macro ~t
+              ~(dom-symbol t)
+              attrs->react
+              attrs->react))))
 
 (define-dom-macros)
