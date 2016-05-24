@@ -1,4 +1,5 @@
-(ns flupot.core)
+(ns flupot.core
+  (:require [flupot.core.parsing :as p]))
 
 (defn clj->js [x]
   (cond
@@ -27,17 +28,11 @@
           (flupot.core/push-child! args# child#))
         (.apply ~elemf nil args#)))))
 
-(defn quoted? [x]
-  (and (list? x) (= 'quote (first x))))
-
-(defn literal? [x]
-  (or (quoted? x) (not (or (symbol? x) (list? x)))))
-
 (defn- flat-dom-form [elemf attrf attrm opts children]
   (cond
     (map? opts)
     `(~elemf ~(attrm opts) ~@children)
-    (literal? opts)
+    (p/literal? opts)
     `(~elemf nil ~opts ~@children)
     :else
     `(let [opts# ~opts]
@@ -46,7 +41,7 @@
          (~elemf nil opts# ~@children)))))
 
 (defn- nested-dom-form [elemf attrf attrm opts children]
-  (let [child-syms (map (fn [c] [(if-not (literal? c) (gensym)) c]) children)
+  (let [child-syms (map (fn [c] [(if-not (p/literal? c) (gensym)) c]) children)
         arguments  (map (fn [[s c]] (or s c)) child-syms)
         bindings   (filter first child-syms)
         args-sym   (gensym "args__")]
@@ -56,7 +51,7 @@
            ~(cond
               (map? opts)
               `(.push ~args-sym ~(attrm opts))
-              (literal? opts)
+              (p/literal? opts)
               `(do (.push ~args-sym nil)
                    (.push ~args-sym ~opts))
               :else
@@ -71,7 +66,7 @@
          ~(flat-dom-form elemf attrf attrm opts arguments)))))
 
 (defn compile-dom-form [elemf attrf attrm opts children]
-  (if (every? literal? children)
+  (if (every? p/literal? children)
     (flat-dom-form elemf attrf attrm opts children)
     (nested-dom-form elemf attrf attrm opts children)))
 

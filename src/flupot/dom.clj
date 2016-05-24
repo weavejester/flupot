@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [map meta time])
   (:require [clojure.core :as core]
             [clojure.string :as str]
-            [flupot.core :as flupot]))
+            [flupot.core :as flupot]
+            [flupot.core.parsing :as p]))
 
 (def tags
   '[a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -130,14 +131,14 @@
 
 (defn- to-str [x]
   (cond
-    (keyword? x)       (name x)
-    (flupot/quoted? x) (to-str (second x))
-    :else              (str x)))
+    (keyword? x)  (name x)
+    (p/quoted? x) (to-str (second x))
+    :else         (str x)))
 
 (defn- fix-class [m]
   (let [cls (:class m)]
     (cond
-      (and (or (vector? cls) (set? cls)) (every? flupot/literal? cls))
+      (and (or (vector? cls) (set? cls)) (every? p/literal? cls))
       (assoc m :class (str/join " " (core/map to-str cls)))
       (or (nil? cls) (string? cls) (number? cls) (boolean? cls))
       m
