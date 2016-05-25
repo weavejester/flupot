@@ -123,8 +123,8 @@
 (defmacro define-dom-fns []
   `(do ~@(for [t tags]
            `(flupot/defelement-fn ~t
-              ~(dom-symbol t)
-              attrs->react))))
+              :elemf ~(dom-symbol t)
+              :attrf attrs->react))))
 
 (defn- boolean? [v]
   (or (true? v) (false? v)))
@@ -151,8 +151,8 @@
 (defmacro define-dom-macros []
   `(do ~@(for [t tags]
            `(flupot/defelement-macro ~t
-              ~(dom-symbol t)
-              attrs->react
-              attrs->react))))
+              :elemf ~(dom-symbol t)
+              :attrf attrs->react
+              :attrm attrs->react))))
 
 (define-dom-macros)

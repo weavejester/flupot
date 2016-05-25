@@ -15,18 +15,17 @@
     `(cljs.core/clj->js ~x)))
 
 (defmacro defelement-fn
-  ([name elemf]
-   `(defelement-fn ~name ~elemf cljs.core/clj->js))
-  ([name elemf attrf]
-   `(defn ~name [opts# & children#]
-      (let [args# (cljs.core/array)]
-        (if (map? opts#)
-          (.push args# (~attrf opts#))
-          (do (.push args# nil)
-              (.push args# opts#)))
-        (doseq [child# children#]
-          (flupot.core/push-child! args# child#))
-        (.apply ~elemf nil args#)))))
+  [name & {:keys [elemf attrf]
+           :or   {attrf 'cljs.core/clj->js}}]
+  `(defn ~name [opts# & children#]
+     (let [args# (cljs.core/array)]
+       (if (map? opts#)
+         (.push args# (~attrf opts#))
+         (do (.push args# nil)
+             (.push args# opts#)))
+       (doseq [child# children#]
+         (flupot.core/push-child! args# child#))
+       (.apply ~elemf nil args#))))
 
 (defn- flat-dom-form [elemf attrf attrm opts children]
   (cond
@@ -71,8 +70,8 @@
     (nested-dom-form elemf attrf attrm opts children)))
 
 (defmacro defelement-macro
-  ([name elemf]
-   `(defelement-macro ~name ~elemf cljs.core/clj->js flupot.core/clj->js))
-  ([name elemf attrf attrm]
-   `(defmacro ~name [opts# & children#]
-      (compile-dom-form '~elemf '~attrf ~attrm opts# children#))))
+  [name & {:keys [elemf attrf attrm]
+           :or   {attrf 'cljs.core/clj->js
+                  attrm 'flupot.core/clj->js}}]
+  `(defmacro ~name [opts# & children#]
+     (compile-dom-form '~elemf '~attrf ~attrm opts# children#)))
