@@ -41,7 +41,7 @@ The `class` attribute may be specified as a collection:
 (dom/p {:class ["foo" "bar"]} "Hello World")
 ```
 
-And the `style` attribute may be specified as a may:
+And the `style` attribute may be specified as a map:
 
 ```clojure
 (dom/p {:style {:color :red}} "Hello World")
