@@ -10,7 +10,7 @@ style to [Om][]'s `om.dom` namespace.
 
 Add the following to your project `:dependencies`:
 
-    [flupot "0.3.1"]
+    [flupot "0.4.0"]
 
 ## Basic Usage
 
